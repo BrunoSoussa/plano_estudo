@@ -2,34 +2,82 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabela de Estudos</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
         }
+
         h1 {
             text-align: center;
             color: #4CAF50;
         }
+
+        h2 {
+            text-align: center;
+            margin-top: 50px;
+            color: #4CAF50;
+        }
+
         table {
             width: 80%;
             margin: 20px auto;
             border-collapse: collapse;
             box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.2);
+            background-color: #fff;
         }
+
         th, td {
             padding: 12px;
             text-align: center;
-            border: 1px solid #dddddd;
+            border: 1px solid #ddd;
         }
+
         th {
             background-color: #4CAF50;
             color: white;
         }
+
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
+
         tr:hover {
             background-color: #66b36a;
+        }
+
+        input[type="number"] {
+            width: 70px;
+            padding: 5px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        input[type="checkbox"] {
+            transform: scale(1.5);
+            cursor: pointer;
+        }
+
+        .summary {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            color: #555;
+        }
+
+        .summary p {
+            margin: 10px 0;
+        }
+
+        #totalHours, #daysCompleted {
+            font-weight: bold;
+            color: #4CAF50;
         }
     </style>
 </head>
@@ -37,6 +85,7 @@
 
 <h1>Plano de Estudos Cíclico</h1>
 
+<!-- Tabela fixa do plano de estudos -->
 <table>
     <thead>
         <tr>
@@ -83,6 +132,85 @@
         </tr>
     </tbody>
 </table>
+
+<h2>Tabela Interativa de 100 Dias</h2>
+
+<!-- Tabela interativa -->
+<table id="daysTable">
+    <thead>
+        <tr>
+            <th>Dia</th>
+            <th>Horas</th>
+            <th>Feito?</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Linhas serão geradas dinamicamente -->
+    </tbody>
+</table>
+<div class="summary">
+    <p>Total de horas acumuladas: <span id="totalHours">0</span></p>
+    <p>Total de dias feitos: <span id="daysCompleted">0</span></p>
+</div>
+
+<script>
+    // Elementos
+    const tableBody = document.querySelector("#daysTable tbody");
+    const totalHoursElem = document.getElementById("totalHours");
+    const daysCompletedElem = document.getElementById("daysCompleted");
+
+    // Carregar dados do localStorage ou criar estrutura inicial
+    const storedData = JSON.parse(localStorage.getItem("daysData")) || Array(100).fill({ hours: 0, done: false });
+
+    // Atualizar o resumo
+    function updateSummary() {
+        let totalHours = 0;
+        let daysCompleted = 0;
+
+        const updatedData = [];
+
+        document.querySelectorAll("#daysTable tbody tr").forEach((row, index) => {
+            const hours = parseFloat(row.querySelector(".hoursInput").value) || 0;
+            const isChecked = row.querySelector(".doneCheckbox").checked;
+
+            totalHours += hours;
+            if (isChecked) daysCompleted++;
+
+            // Salvar estado atualizado
+            updatedData.push({ hours, done: isChecked });
+        });
+
+        totalHoursElem.textContent = totalHours.toFixed(2);
+        daysCompletedElem.textContent = daysCompleted;
+
+        // Salvar no localStorage
+        localStorage.setItem("daysData", JSON.stringify(updatedData));
+    }
+
+    // Gerar 100 dias dinamicamente
+    storedData.forEach((data, i) => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>${i + 1}</td>
+            <td>
+                <input type="number" class="hoursInput" min="0" step="0.1" value="${data.hours}">
+            </td>
+            <td>
+                <input type="checkbox" class="doneCheckbox" ${data.done ? "checked" : ""}>
+            </td>
+        `;
+
+        // Adicionar eventos para atualizar resumo ao alterar valores
+        row.querySelector(".hoursInput").addEventListener("input", updateSummary);
+        row.querySelector(".doneCheckbox").addEventListener("change", updateSummary);
+
+        tableBody.appendChild(row);
+    });
+
+    // Atualizar resumo ao carregar
+    updateSummary();
+</script>
 
 </body>
 </html>
